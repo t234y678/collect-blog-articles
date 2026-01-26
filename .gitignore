@@ -1,0 +1,11 @@
+node_modules/
+.env
+output/
+*.log
+subscriptions_list.txt
+categories_list.txt
+logs/
+feed-check-results.json
+list-disabled-feeds.js
+check-disabled-feeds.js
+.claude/

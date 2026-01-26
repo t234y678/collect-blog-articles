@@ -1,0 +1,69 @@
+{
+  "categories": [
+    {
+      "id": "value_stock",
+      "name": "バリュー株・個別株分析",
+      "description": "成長性のあるバリュー株情報、銘柄分析",
+      "feedlyLabels": ["上手い人", "投資"],
+      "keywords": ["バリュー", "成長株", "銘柄", "決算", "PER", "PBR", "割安"],
+      "priority": 1
+    },
+    {
+      "id": "macro",
+      "name": "マクロ経済・相場情報",
+      "description": "世界経済、金融市場の動向",
+      "feedlyLabels": ["投資"],
+      "keywords": ["マクロ", "金利", "為替", "インフレ", "GDP", "FRB", "日銀"],
+      "priority": 1
+    },
+    {
+      "id": "think_tank",
+      "name": "シンクタンク・レポート",
+      "description": "専門機関による経済分析レポート",
+      "feedlyLabels": ["真面目なレポート"],
+      "keywords": ["レポート", "分析", "展望", "予測"],
+      "priority": 2
+    },
+    {
+      "id": "nikkei",
+      "name": "日経ニュース",
+      "description": "日本経済新聞の速報・ニュース",
+      "feedlyLabels": ["日経", "決算サマリー"],
+      "keywords": [],
+      "priority": 2
+    },
+    {
+      "id": "real_estate",
+      "name": "不動産投資",
+      "description": "不動産投資、マンション情報",
+      "feedlyLabels": ["投資"],
+      "keywords": ["不動産", "マンション", "物件", "利回り"],
+      "priority": 3
+    },
+    {
+      "id": "crypto",
+      "name": "仮想通貨",
+      "description": "暗号資産、ブロックチェーン",
+      "feedlyLabels": ["仮想通貨"],
+      "keywords": ["ビットコイン", "イーサリアム", "仮想通貨", "暗号資産"],
+      "priority": 3
+    },
+    {
+      "id": "general",
+      "name": "一般・雑記",
+      "description": "ビジネス、ライフハック等",
+      "feedlyLabels": ["Subscriptions", "雑文"],
+      "keywords": [],
+      "priority": 4
+    }
+  ],
+  "importantFeeds": [
+    "グローバルマクロ・リサーチ・インスティテュート",
+    "炭鉱のカナリア、炭鉱の龍",
+    "みんなの運用会議",
+    "豊健活人生：春山昇華",
+    "Market Hack",
+    "ニッセイ基礎研究所",
+    "大和総研"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "collect-blog-articles",
+  "version": "1.0.0",
+  "description": "Feedly記事収集・要約・ニュースレター配信システム",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "fetch": "node src/index.js --fetch",
+    "newsletter": "node src/index.js --newsletter",
+    "daily": "node src/index.js --daily",
+    "batch": "node src/batch-newsletter.js",
+    "batch:test": "node src/batch-newsletter.js --no-send",
+    "batch:investors": "node src/batch-newsletter.js --genres investors",
+    "batch:macro": "node src/batch-newsletter.js --genres macro"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "nodemailer": "^6.9.7",
+    "openai": "^4.20.0",
+    "rss-parser": "^3.13.0"
+  },
+  "author": "",
+  "license": "MIT"
+}
