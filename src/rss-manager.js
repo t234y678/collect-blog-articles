@@ -182,9 +182,24 @@ export class RSSManager {
       process.stdout.write(`\rProgress: ${completed}/${targetFeeds.length} feeds (${errors} errors)`);
     }
 
-    console.log(`\nFetch complete: ${allEntries.length} entries from ${targetFeeds.length - errors} feeds`);
+    // URLベースで重複排除（同じ記事が複数のフィードに含まれる場合）
+    const seenUrls = new Set();
+    const uniqueEntries = [];
+    for (const entry of allEntries) {
+      if (!seenUrls.has(entry.url)) {
+        seenUrls.add(entry.url);
+        uniqueEntries.push(entry);
+      }
+    }
 
-    return allEntries.sort((a, b) => b.published - a.published);
+    const duplicateCount = allEntries.length - uniqueEntries.length;
+    if (duplicateCount > 0) {
+      console.log(`\nRemoved ${duplicateCount} duplicate entries`);
+    }
+
+    console.log(`\nFetch complete: ${uniqueEntries.length} entries from ${targetFeeds.length - errors} feeds`);
+
+    return uniqueEntries.sort((a, b) => b.published - a.published);
   }
 
   listFeeds() {
