@@ -2,14 +2,25 @@ import nodemailer from 'nodemailer';
 
 export class Mailer {
   constructor(config) {
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: config.user,
-        pass: config.appPassword
-      }
-    });
-    this.from = config.user;
+    // Resend(SMTP)を優先し、未設定ならGmailにフォールバック
+    this.transporter = config.resendApiKey
+      ? nodemailer.createTransport({
+          host: 'smtp.resend.com',
+          port: 465,
+          secure: true,
+          auth: {
+            user: 'resend',
+            pass: config.resendApiKey
+          }
+        })
+      : nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: config.user,
+            pass: config.appPassword
+          }
+        });
+    this.from = config.from || config.user;
     this.to = config.to;
   }
 

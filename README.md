@@ -31,11 +31,13 @@ npm install
 `.env` ファイルを作成：
 
 ```env
-GMAIL_USER=your-email@gmail.com
-GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+RESEND_API_KEY=re_xxxxx
+# RESEND_FROM=Newsletter <news@your-domain.example>   # 省略時 onboarding@resend.dev
 NEWSLETTER_TO=recipient@example.com
 ANTHROPIC_API_KEY=sk-ant-xxxxx
 ```
+
+送信は Resend の SMTP リレー（無料枠）を使います。`onboarding@resend.dev` から送れるのは Resend に登録したアドレス宛てだけです。他の宛先に送るには、Resend でドメインを認証して `RESEND_FROM` を設定してください。`RESEND_API_KEY` がなければ、従来の `GMAIL_USER` / `GMAIL_APP_PASSWORD` で送ります。
 
 ### 3. 手動実行（テスト）
 
@@ -70,7 +72,7 @@ Windows タスクスケジューラに以下のバッチファイルを登録：
 - **Node.js** (ES Modules)
 - **rss-parser** - RSSフィード解析
 - **@anthropic-ai/sdk** - Claude API（AI分析）
-- **nodemailer** - メール送信（Gmail経由）
+- **nodemailer** - メール送信（Resend SMTP。Gmail にフォールバック）
 
 ## 📂 プロジェクト構成
 
@@ -169,7 +171,7 @@ powershell -command "Get-Content logs\batch-newsletter.log -Tail 20"
 ## 🔒 セキュリティ
 
 - `.env` ファイルは `.gitignore` に含まれています
-- Gmail アプリパスワードを使用（通常のパスワードは使わない）
+- メール送信は Resend の API キーを使用（Gmail を使う場合はアプリパスワード）
 - API キーは環境変数で管理
 
 ## 📄 ライセンス
