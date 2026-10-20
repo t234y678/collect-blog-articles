@@ -1,9 +1,16 @@
 import Anthropic from '@anthropic-ai/sdk';
 
+// Sonnet 5.5 は thinking ブロックが先頭に来ることがあるため text ブロックだけを連結する
+function extractText(response) {
+  return response.content.filter(b => b.type === 'text').map(b => b.text).join('');
+}
+
 export class ArticleAnalyzer {
   constructor(apiKey) {
     this.client = new Anthropic({ apiKey });
-    this.model = 'claude-sonnet-4-20250514';
+    this.model = 'claude-sonnet-5-5';
+    // 分析を諦めて素通しした回数(バッチの終了コード判定に使う)
+    this.errorCount = 0;
   }
 
   async analyzeArticles(entries, categoryConfig) {
@@ -25,6 +32,7 @@ export class ArticleAnalyzer {
         analyzedEntries.push(...analyzed);
       } catch (error) {
         console.error(`Error analyzing batch ${batchNum}:`, error.message);
+        this.errorCount++;
         // エラー時は元の記事をそのまま追加（分析なし）
         analyzedEntries.push(...batch.map(e => ({
           ...e,
@@ -86,11 +94,12 @@ ${articlesText}
 
     const response = await this.client.messages.create({
       model: this.model,
-      max_tokens: 4096,
+      max_tokens: 8000,
+      output_config: { effort: 'low' },
       messages: [{ role: 'user', content: prompt }]
     });
 
-    const responseText = response.content[0].text;
+    const responseText = extractText(response);
 
     // JSONを抽出
     let analysisResults;
@@ -104,6 +113,7 @@ ${articlesText}
       }
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError.message);
+      this.errorCount++;
       return entries.map(e => ({
         ...e,
         aiSummary: null,
@@ -167,13 +177,15 @@ ${articlesText}
     try {
       const response = await this.client.messages.create({
         model: this.model,
-        max_tokens: 1024,
+        max_tokens: 2048,
+        output_config: { effort: 'low' },
         messages: [{ role: 'user', content: prompt }]
       });
 
-      return response.content[0].text;
+      return extractText(response);
     } catch (error) {
       console.error('Failed to generate daily summary:', error.message);
+      this.errorCount++;
       return null;
     }
   }

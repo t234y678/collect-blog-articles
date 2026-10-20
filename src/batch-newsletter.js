@@ -84,6 +84,7 @@ async function generateNewsletterForGenre(genre, entries, config, useAI = true) 
   }
 
   let dailySummary = null;
+  let aiErrors = 0;
 
   // AI分析（ANTHROPIC_API_KEYがある場合）
   if (useAI && process.env.ANTHROPIC_API_KEY) {
@@ -95,6 +96,7 @@ async function generateNewsletterForGenre(genre, entries, config, useAI = true) 
 
     // 重要記事のデイリーサマリー生成
     dailySummary = await analyzer.generateDailySummary(entries, config);
+    aiErrors = analyzer.errorCount;
 
     console.log(`[${genre.emoji} ${genre.name}] AI分析完了`);
   } else {
@@ -114,17 +116,24 @@ async function generateNewsletterForGenre(genre, entries, config, useAI = true) 
   return {
     genre,
     newsletter,
-    entryCount: entries.length
+    entryCount: entries.length,
+    aiErrors
   };
 }
 
 async function sendNewsletter(genre, newsletter) {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    console.log(`[${genre.emoji} ${genre.name}] Gmail認証情報が未設定のため送信スキップ`);
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const hasGmail = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD;
+  if (!resendApiKey && !hasGmail) {
+    console.log(`[${genre.emoji} ${genre.name}] メール送信設定(RESEND_API_KEY / Gmail)が未設定のため送信スキップ`);
     return false;
   }
 
   const mailer = new Mailer({
+    resendApiKey,
+    from: resendApiKey
+      ? (process.env.RESEND_FROM || 'Newsletter <onboarding@resend.dev>')
+      : process.env.GMAIL_USER,
     user: process.env.GMAIL_USER,
     appPassword: process.env.GMAIL_APP_PASSWORD,
     to: process.env.NEWSLETTER_TO || process.env.GMAIL_USER
@@ -169,6 +178,7 @@ async function batchGenerateAndSend(options = {}) {
   console.log(`\n対象ジャンル: ${targetGenres.map(g => g.name).join(', ')}\n`);
 
   const results = [];
+  const failures = [];
 
   // 各ジャンルごとに処理
   for (const genre of targetGenres) {
@@ -189,16 +199,22 @@ async function batchGenerateAndSend(options = {}) {
       }
 
       results.push(result);
+      if (result.aiErrors > 0) {
+        failures.push(`${genre.name}: AI分析エラー ${result.aiErrors}件`);
+      }
 
       // メール送信
       if (sendEmail) {
-        await sendNewsletter(genre, result.newsletter);
+        if (!await sendNewsletter(genre, result.newsletter)) {
+          failures.push(`${genre.name}: 送信設定なし`);
+        }
         // レート制限回避のため少し待機
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
     } catch (error) {
       console.error(`[${genre.emoji} ${genre.name}] エラー:`, error.message);
+      failures.push(`${genre.name}: ${error.message.split('\n')[0]}`);
       if (process.env.DEBUG) {
         console.error(error.stack);
       }
@@ -213,7 +229,15 @@ async function batchGenerateAndSend(options = {}) {
   for (const result of results) {
     console.log(`  ${result.genre.emoji} ${result.genre.name}: ${result.entryCount}記事`);
   }
+  if (failures.length > 0) {
+    console.error(`失敗 ${failures.length}件:`);
+    for (const failure of failures) {
+      console.error(`  ✗ ${failure}`);
+    }
+  }
   console.log('='.repeat(60));
+
+  return { results, failures };
 }
 
 // CLI実行
@@ -274,7 +298,12 @@ ${NEWSLETTER_GENRES.map(g => `  ${g.id.padEnd(15)} ${g.emoji} ${g.name} (${g.des
     process.exit(0);
   }
 
-  batchGenerateAndSend(options).catch(error => {
+  batchGenerateAndSend(options).then(({ failures }) => {
+    // 失敗があればタスクスケジューラ/バッチ側で検知できるよう非0で終了
+    if (failures.length > 0) {
+      process.exitCode = 1;
+    }
+  }).catch(error => {
     console.error('Fatal error:', error.message);
     if (process.env.DEBUG) {
       console.error(error.stack);
